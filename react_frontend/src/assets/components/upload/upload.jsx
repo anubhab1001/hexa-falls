@@ -3,8 +3,36 @@
 import React, { useState, useCallback } from 'react';
 import { XCircle, Loader2, CheckCircle } from 'lucide-react';
 
+const ALLERGEN_MAPPING = {
+  milk: 'milk', wheat: 'wheat', soy: 'soy', gluten: 'gluten',
+  egg: 'egg', eggs: 'egg', peanut: 'peanut', nuts: 'tree nuts',
+  fish: 'fish', shellfish: 'shellfish', sesame: 'sesame',
+  lait: 'milk', blé: 'wheat', soja: 'soy', beurre: 'butter',
+  œufs: 'egg', arachide: 'peanut', noisettes: 'hazelnuts',
+  leche: 'milk', trigo: 'wheat', huevo: 'egg', cacahuete: 'peanut',
+  casein: 'milk', lactose: 'milk', albumin: 'egg'
+};
+
+const preprocessText = (text) => {
+  let cleaned = text.toLowerCase().replace(/[^À-ÿ\w\s]/gi, ' ');
+  ['contains', 'may contain', 'ingredients', 'ingredientes', 'ingrédients']
+    .forEach(term => cleaned = cleaned.replace(term, ''));
+  return cleaned;
+};
+
+const detectAllergensOffline = (text) => {
+  const cleaned = preprocessText(text);
+  const words = cleaned.split(/\s+/);
+  const found = new Set();
+  for (const word of words) {
+    if (ALLERGEN_MAPPING[word]) found.add(ALLERGEN_MAPPING[word]);
+  }
+  return Array.from(found);
+};
+
 const UploadPage = () => {
   const [textInput, setTextInput] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
@@ -12,52 +40,73 @@ const UploadPage = () => {
 
   const resetAnalysis = () => {
     setTextInput("");
+    setImageFile(null);
     setAnalysisResult(null);
     setError(null);
   };
 
   const analyzeText = useCallback(async () => {
-    if (!textInput.trim()) {
-      setError("Please enter ingredients to analyze");
-      return;
-    }
-
     setIsAnalyzing(true);
     setError(null);
 
     try {
-      const response = await fetch(`${apiEndpoint}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredients: textInput }),
-      });
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        const response = await fetch(`${apiEndpoint}/ocr-translate-predict`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "API error");
+
+        setAnalysisResult({
+          safe: Object.keys(data.prediction)[0] === "No allergens detected",
+          allergens: Object.keys(data.prediction),
+          confidence: data.confidence || 95,
+          rawText: data.translated_text || data.ocr_text
+        });
+      } else if (textInput.trim()) {
+        const response = await fetch(`${apiEndpoint}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ingredients: textInput }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "API error");
+
+        setAnalysisResult({
+          safe: Object.keys(data.prediction)[0] === "No allergens detected",
+          allergens: Object.keys(data.prediction),
+          confidence: data.confidence || 95,
+          rawText: textInput
+        });
+      } else {
+        throw new Error("Please provide ingredients via text or image.");
       }
-
-      const data = await response.json();
+    } catch (err) {
+      console.warn("Fallback to offline:", err.message);
+      const offlineDetected = detectAllergensOffline(textInput);
       setAnalysisResult({
-        safe: Object.keys(data.prediction)[0] === "No allergens detected",
-        allergens: Object.keys(data.prediction),
-        confidence: data.confidence || 95,
+        safe: offlineDetected.length === 0,
+        allergens: offlineDetected.length > 0 ? offlineDetected : ["No allergens detected"],
+        confidence: 80,
         rawText: textInput
       });
-
-    } catch (err) {
-      setError(err.message || "Analysis failed");
     } finally {
       setIsAnalyzing(false);
     }
-  }, [textInput, apiEndpoint]);
+  }, [textInput, imageFile, apiEndpoint]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">SafeBite Allergen Detection</h1>
-          <p className="text-gray-600 mt-2">Enter food ingredients to detect potential allergens</p>
+          <p className="text-gray-600 mt-2">Enter or upload food label to detect allergens</p>
         </div>
 
         {error && (
@@ -70,9 +119,12 @@ const UploadPage = () => {
         )}
 
         <div className="bg-white shadow rounded-lg p-6">
+          <label className="block mb-2 font-medium text-gray-700">Upload Image</label>
+          <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} className="mb-4" />
+
           <textarea
             rows={5}
-            placeholder="Enter ingredients (e.g. milk, eggs, wheat, peanuts...)"
+            placeholder="Or enter ingredients (e.g. milk, eggs, wheat...)"
             value={textInput}
             onChange={(e) => {
               setTextInput(e.target.value);
@@ -84,9 +136,9 @@ const UploadPage = () => {
 
           <button
             onClick={analyzeText}
-            disabled={isAnalyzing || !textInput.trim()}
+            disabled={isAnalyzing || (!textInput.trim() && !imageFile)}
             className={`mt-4 w-full py-2 px-4 rounded-md text-white font-medium ${
-              isAnalyzing || !textInput.trim()
+              isAnalyzing || (!textInput.trim() && !imageFile)
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-emerald-600 hover:bg-emerald-700'
             }`}
@@ -97,7 +149,7 @@ const UploadPage = () => {
                 Analyzing...
               </span>
             ) : (
-              'Analyze Text'
+              'Analyze'
             )}
           </button>
         </div>
@@ -154,3 +206,4 @@ const UploadPage = () => {
 };
 
 export default UploadPage;
+

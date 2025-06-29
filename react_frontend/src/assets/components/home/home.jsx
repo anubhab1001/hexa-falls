@@ -21,6 +21,7 @@ import {
 import FeatureCard from '../featurecard/featurecard';
 
 const HomePage = ({ setCurrentPage }) => (
+  
   <div className="min-h-screen">
     {/* Hero Section */}
     <section className="bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 text-white py-20 relative overflow-hidden">
@@ -34,12 +35,13 @@ const HomePage = ({ setCurrentPage }) => (
           <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed">
             Advanced application designed to revolutionize allergen detection and food safety management for everyone.
           </p>
-          <button 
-            onClick={() => setCurrentPage('upload')}
-            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
-          >
-            Get Started
-          </button>
+          <a 
+  href="/upload"
+  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 inline-block"
+>
+  Get Started
+</a>
+
         </div>
       </div>
     </section>
