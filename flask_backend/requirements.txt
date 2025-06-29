@@ -1,6 +1,6 @@
 Flask
 flask-cors
 scikit-learn
-firebase-admin
 pickle-mixin
 gunicorn
+pillow
