@@ -57,20 +57,20 @@ hexa-falls/
 4. Go to Project Settings → Service accounts → Generate new private key → download as `firebase_key.json`.
 5. Place `firebase_key.json` inside `flask_backend/`.
 
-### 2️⃣ Backend Setup (Flask + Model)
+2️⃣ Backend Setup (Flask + Model)
 
 bash
 cd flask_backend
 pip install -r requirements.txt  # flask, firebase-admin, flask-cors, scikit-learn
 python app.py  # Starts server at http://127.0.0.1:5000
 
-###3️⃣ Frontend Setup (React + Firebase)
+3️⃣ Frontend Setup (React + Firebase)
 
 cd react_frontend
 npm install
 npm run dev  # Runs app at http://localhost:5173
 
-###🔐 Firestore Database Structure
+🔐 Firestore Database Structure
 
 users
  └── {uid}
@@ -83,7 +83,7 @@ users
                 └── timestamp: serverTimestamp
 
 
-###🔐 Firestore Security Rules
+🔐 Firestore Security Rules
 
 rules_version = '2';
 service cloud.firestore {
@@ -95,7 +95,7 @@ service cloud.firestore {
 }
 
 
-##🧪 How It Works
+🧪 How It Works
 
 User enters food ingredients.
 Text is sent to the Flask backend at /predict.
@@ -104,7 +104,7 @@ Detected allergens are returned to the frontend.
 Results are stored in Firestore under the logged-in user.
 
 
-##💡 Future Improvements
+💡 Future Improvements
 
 📷 Image OCR-based ingredient extraction.
 🌍 Multi-language allergen detection.
@@ -112,7 +112,7 @@ Results are stored in Firestore under the logged-in user.
 📊 Analytics Dashboard for user scans.
 
 
-##🧠 Built With
+🧠 Built With
 
 React + Vite + TailwindCSS
 Flask + Scikit-learn
@@ -121,17 +121,17 @@ Pickle for ML model
 Lucide Icons
 
 
-##✨ Tagline
+✨ Tagline
 
-###Scan It. Know It. Trust Your Bite.
+Scan It. Know It. Trust Your Bite.
 
 
-##📃 License
+📃 License
 
 This project is open-source and available under the MIT License.
 
 
-##🙌 Credits
+🙌 Credits
 Developed by Arpan Kundu for the HexaFalls Hackathon.
 
 GitHub: @ARPANkundu2404
