@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  User,
-  Lock,
-  Mail,
-  Eye,
-  EyeOff
-} from "lucide-react";
+import { User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -16,6 +10,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../../../utils/firebase"; // Adjust the import path as necessary
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../../userContext";
+import { getDoc } from "firebase/firestore";
 
 const AuthHero = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -47,19 +42,29 @@ const AuthHero = () => {
     setError("");
     try {
       if (isLogin) {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         const user = userCredential.user;
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        let photoURL = user.photoURL || "";
+        if (userDoc.exists() && userDoc.data().photoURL) {
+          photoURL = userDoc.data().photoURL;
+        }
 
         await setDoc(
           doc(db, "users", user.uid),
           {
-            name,
+            name: user.displayName || name,
             email,
             uid: user.uid,
             provider: "email",
             role: "user",
-            photoURL: user.photoURL || "",
-            createdAt: new Date(),
+            photoURL,
+            createdAt: userDoc.exists() ? userDoc.data().createdAt : new Date(),
           },
           { merge: true }
         );
@@ -68,7 +73,11 @@ const AuthHero = () => {
         alert("Logged in successfully!");
         navigate("/");
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         const user = userCredential.user;
 
         await setDoc(doc(db, "users", user.uid), {
@@ -77,6 +86,7 @@ const AuthHero = () => {
           uid: user.uid,
           provider: "email",
           role: "user",
+          photoURL: "",
           createdAt: new Date(),
         });
 
@@ -85,8 +95,17 @@ const AuthHero = () => {
         navigate("/");
       }
     } catch (err) {
+      if (
+        err.code === "auth/account-exists-with-different-credential" ||
+        err.code === "auth/email-already-in-use"
+      ) {
+        setError(
+          "An account with this email already exists. Please use a different email or sign in."
+        );
+      } else {
+        setError(err.message);
+      }
       console.error(err);
-      setError(err.message);
     }
   };
 
@@ -114,8 +133,14 @@ const AuthHero = () => {
       alert("Signed in with Google!");
       setTimeout(() => navigate("/"), 100);
     } catch (err) {
+      if (err.code === "auth/account-exists-with-different-credential") {
+        setError(
+          "An account already exists with this email. Try signing in with email and password."
+        );
+      } else {
+        setError(err.message);
+      }
       console.error(err);
-      setError(err.message);
     }
   };
 
@@ -185,7 +210,11 @@ const AuthHero = () => {
                   onClick={togglePasswordVisibility}
                   className="absolute right-3 top-3 text-emerald-400 hover:text-emerald-300"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
