@@ -4,4 +4,5 @@ scikit-learn
 firebase-admin
 pickle-mixin
 pillow
+pytesseract
 gunicorn
