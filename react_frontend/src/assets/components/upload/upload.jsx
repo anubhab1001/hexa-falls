@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { XCircle, Loader2, CheckCircle } from "lucide-react";
+const backend_url = import.meta.env.VITE_BACKEND_URL;
 
 const ALLERGEN_MAPPING = {
   milk: "milk",
@@ -59,7 +60,7 @@ const UploadPage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
-  const [apiEndpoint] = useState("http://127.0.0.1:5000");
+  const [apiEndpoint] = useState(backend_url);
 
   const resetAnalysis = () => {
     setTextInput("");
