@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 '''# ✅ Updated app.py for SafeBite (Offline-ready with text-only prediction)
 
 from flask import Flask, request, jsonify
@@ -90,6 +91,8 @@ if __name__ == '__main__':
 
 
 
+=======
+>>>>>>> friend
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
@@ -98,15 +101,21 @@ import io
 import pickle
 import re
 from googletrans import Translator
+import os
 
 app = Flask(__name__)
 CORS(app)
 
 # Load model and vectorizer
-with open('model/safebite_model.pkl', 'rb') as f:
-    model = pickle.load(f)
-with open('model/safebite_vectorizer.pkl', 'rb') as f:
-    vectorizer = pickle.load(f)
+try:
+    with open('model/safebite_model.pkl', 'rb') as f:
+        model = pickle.load(f)
+    with open('model/safebite_vectorizer.pkl', 'rb') as f:
+        vectorizer = pickle.load(f)
+except Exception as e:
+    print("Model loading error:", e)
+    model = None
+    vectorizer = None
 
 ALLERGEN_MAPPING = {
     'milk': 'milk', 'wheat flour' : 'wheat','wheat': 'wheat', 'soy': 'soy', 'gluten': 'gluten',
@@ -188,6 +197,7 @@ def ocr_translate_predict():
         return jsonify({"error": str(e), "status": "error"}), 500
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     app.run(debug=True) 
     
 
@@ -316,6 +326,10 @@ def ocr_translate_predict():
 
 if __name__ == '__main__':
     app.run(debug=True)
+=======
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
+>>>>>>> friend
 
 
 '''
