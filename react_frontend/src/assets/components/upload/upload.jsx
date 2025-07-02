@@ -1,5 +1,3 @@
-// src/pages/UploadPage.jsx
-
 import React, { useState, useCallback } from 'react';
 import { XCircle, Loader2, CheckCircle } from 'lucide-react';
 
@@ -15,7 +13,7 @@ const ALLERGEN_MAPPING = {
 
 const preprocessText = (text) => {
   let cleaned = text.toLowerCase().replace(/[^À-ÿ\w\s]/gi, ' ');
-  ['contains', 'may contain', 'ingredients', 'ingredientes', 'ingrédients']
+  ['contains', 'may contain', 'ingredients', 'ingredientes', 'ingrédients','INGREDIENTS']
     .forEach(term => cleaned = cleaned.replace(term, ''));
   return cleaned;
 };
@@ -66,7 +64,7 @@ const UploadPage = () => {
           safe: Object.keys(data.prediction)[0] === "No allergens detected",
           allergens: Object.keys(data.prediction),
           confidence: data.confidence || 95,
-          rawText: data.translated_text || data.ocr_text
+          rawText: `OCR: ${data.ocr_text || 'N/A'}\n\nTranslated: ${data.translated_text || 'N/A'}`
         });
       } else if (textInput.trim()) {
         const response = await fetch(`${apiEndpoint}/predict`, {
@@ -89,13 +87,15 @@ const UploadPage = () => {
       }
     } catch (err) {
       console.warn("Fallback to offline:", err.message);
-      const offlineDetected = detectAllergensOffline(textInput);
+      const fallbackText = imageFile ? '[Fallback: offline mode unavailable for image]' : textInput;
+      const offlineDetected = detectAllergensOffline(fallbackText);
       setAnalysisResult({
         safe: offlineDetected.length === 0,
         allergens: offlineDetected.length > 0 ? offlineDetected : ["No allergens detected"],
         confidence: 80,
-        rawText: textInput
+        rawText: fallbackText
       });
+      setError("⚠️ Using fallback detection. Server unreachable or returned an error.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -106,14 +106,14 @@ const UploadPage = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">SafeBite Allergen Detection</h1>
-          <p className="text-gray-600 mt-2">Enter or upload food label to detect allergens</p>
+          <p className="text-gray-600 mt-2">Upload image or enter ingredients manually</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4">
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
             <div className="flex items-center">
-              <XCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700">{error}</p>
+              <XCircle className="h-5 w-5 text-yellow-500 mr-2" />
+              <p className="text-yellow-700 text-sm">{error}</p>
             </div>
           </div>
         )}
@@ -124,7 +124,7 @@ const UploadPage = () => {
 
           <textarea
             rows={5}
-            placeholder="Or enter ingredients (e.g. milk, eggs, wheat...)"
+            placeholder="Or type ingredients (e.g. milk, wheat, egg...)"
             value={textInput}
             onChange={(e) => {
               setTextInput(e.target.value);
@@ -176,7 +176,7 @@ const UploadPage = () => {
 
             {!analysisResult.safe && (
               <div className="bg-red-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-red-800 mb-2">Detected Allergens:</h4>
+                <h4 className="font-semibold text-red-800 mb-2">Detected Allergens: </h4>
                 <div className="flex flex-wrap gap-2">
                   {analysisResult.allergens.map((allergen, idx) => (
                     <span key={idx} className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
@@ -206,4 +206,3 @@ const UploadPage = () => {
 };
 
 export default UploadPage;
-
