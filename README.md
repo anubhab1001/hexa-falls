@@ -91,9 +91,6 @@ GitHub: [@ARPANkundu2404](https://github.com/ARPANkundu2404)
 
 ---
 
-*For screenshots, badges, or additional deployment instructions (Firebase Hosting, Vercel, etc.), open an issue or PR!*
-
-*Good luck with your hackathon demo! 🏆*
 
 
 
