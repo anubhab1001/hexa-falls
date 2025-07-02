@@ -1,9 +1,9 @@
 Flask
 flask-cors
 scikit-learn
-firebase-admin
 pickle-mixin
 pillow
 pytesseract
 googletrans==4.0.0rc1
 gunicorn
+pillow
