@@ -85,7 +85,7 @@ This project is open-source and available under the MIT License.
 
 ## 🙌 Credits
 
-Developed by Arpan Kundu for the HexaFalls Hackathon.
+Developed by Arpan Kundu & Anubhab De for the HexaFalls Hackathon.
 
 GitHub: [@ARPANkundu2404](https://github.com/ARPANkundu2404)
 
